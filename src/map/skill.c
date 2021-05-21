@@ -5128,70 +5128,70 @@ static int skill_castend_damage_id(struct block_list *src, struct block_list *bl
 		break;
 
 		// Splash attack skills.
-		case AS_GRIMTOOTH:
-		case MC_CARTREVOLUTION:
-		case NPC_SPLASHATTACK:
-			flag |= SD_PREAMBLE; // a fake packet will be sent for the first target to be hit
-			FALLTHROUGH
-		case AS_SPLASHER:
-		case HT_BLITZBEAT:
-		case AC_SHOWER:
-		case MA_SHOWER:
-		case MG_NAPALMBEAT:
-		case MG_FIREBALL:
-		case RG_RAID:
-		case HW_NAPALMVULCAN:
-		case NJ_HUUMA:
-		case NJ_BAKUENRYU:
-		case ASC_METEORASSAULT:
-		case GS_DESPERADO:
-		case GS_SPREADATTACK:
-		case NPC_PULSESTRIKE:
-		case NPC_HELLJUDGEMENT:
-		case NPC_VAMPIRE_GIFT:
-		case RK_IGNITIONBREAK:
-		case AB_JUDEX:
-		case WL_SOULEXPANSION:
-		case WL_CRIMSONROCK:
-		case WL_COMET:
-		case WL_JACKFROST:
-		case RA_ARROWSTORM:
-		case RA_WUGDASH:
-		case NC_VULCANARM:
-		case NC_ARMSCANNON:
-		case NC_SELFDESTRUCTION:
-		case NC_AXETORNADO:
-		case GC_ROLLINGCUTTER:
-		case GC_COUNTERSLASH:
-		case LG_MOONSLASHER:
-		case LG_EARTHDRIVE:
-		case SR_TIGERCANNON:
-		case SR_RAMPAGEBLASTER:
-		case SR_SKYNETBLOW:
-		case SR_WINDMILL:
-		case SR_RIDEINLIGHTNING:
-		case WM_REVERBERATION:
-		case SO_VARETYR_SPEAR:
-		case GN_CART_TORNADO:
-		case GN_CARTCANNON:
-		case KO_HAPPOKUNAI:
-		case KO_HUUMARANKA:
-		case KO_MUCHANAGE:
-		case KO_BAKURETSU:
-		case GN_ILLUSIONDOPING:
-		case MH_XENO_SLASHER:
-		case SU_SCRATCH:
-		case SU_LUNATICCARROTBEAT:
-			if (flag&1) { //Recursive invocation
-				// skill->area_temp[0] holds number of targets in area
-				// skill->area_temp[1] holds the id of the original target
-				// skill->area_temp[2] counts how many targets have already been processed
-				int sflag = skill->area_temp[0] & 0xFFF, heal;
-				struct status_change *tsc = status->get_sc(bl);
-				if( flag&SD_LEVEL )
-					sflag |= SD_LEVEL; // -1 will be used in packets instead of the skill level
-				if( (skill->area_temp[1] != bl->id && !(skill->get_inf2(skill_id)&INF2_NPC_SKILL)) || flag&SD_ANIMATION )
-					sflag |= SD_ANIMATION; // original target gets no animation (as well as all NPC skills)
+	case AS_GRIMTOOTH:
+	case MC_CARTREVOLUTION:
+	case NPC_SPLASHATTACK:
+		flag |= SD_PREAMBLE; // a fake packet will be sent for the first target to be hit
+		FALLTHROUGH
+	case AS_SPLASHER:
+	case HT_BLITZBEAT:
+	case AC_SHOWER:
+	case MA_SHOWER:
+	case MG_NAPALMBEAT:
+	case MG_FIREBALL:
+	case RG_RAID:
+	case HW_NAPALMVULCAN:
+	case NJ_HUUMA:
+	case NJ_BAKUENRYU:
+	case ASC_METEORASSAULT:
+	case GS_DESPERADO:
+	case GS_SPREADATTACK:
+	case NPC_PULSESTRIKE:
+	case NPC_HELLJUDGEMENT:
+	case NPC_VAMPIRE_GIFT:
+	case RK_IGNITIONBREAK:
+	case AB_JUDEX:
+	case WL_SOULEXPANSION:
+	case WL_CRIMSONROCK:
+	case WL_COMET:
+	case WL_JACKFROST:
+	case RA_ARROWSTORM:
+	case RA_WUGDASH:
+	case NC_VULCANARM:
+	case NC_ARMSCANNON:
+	case NC_SELFDESTRUCTION:
+	case NC_AXETORNADO:
+	case GC_ROLLINGCUTTER:
+	case GC_COUNTERSLASH:
+	case LG_MOONSLASHER:
+	case LG_EARTHDRIVE:
+	case SR_TIGERCANNON:
+	case SR_RAMPAGEBLASTER:
+	case SR_SKYNETBLOW:
+	case SR_WINDMILL:
+	case SR_RIDEINLIGHTNING:
+	case WM_REVERBERATION:
+	case SO_VARETYR_SPEAR:
+	case GN_CART_TORNADO:
+	case GN_CARTCANNON:
+	case KO_HAPPOKUNAI:
+	case KO_HUUMARANKA:
+	case KO_MUCHANAGE:
+	case KO_BAKURETSU:
+	case GN_ILLUSIONDOPING:
+	case MH_XENO_SLASHER:
+	case SU_SCRATCH:
+	case SU_LUNATICCARROTBEAT:
+		if ( flag & 1 ) { //Recursive invocation
+			// skill->area_temp[0] holds number of targets in area
+			// skill->area_temp[1] holds the id of the original target
+			// skill->area_temp[2] counts how many targets have already been processed
+			int sflag = skill->area_temp[0] & 0xFFF, heal;
+			struct status_change *tsc = status->get_sc(bl);
+			if ( flag & SD_LEVEL )
+				sflag |= SD_LEVEL; // -1 will be used in packets instead of the skill level
+			if ( (skill->area_temp[1] != bl->id && !(skill->get_inf2(skill_id) & INF2_NPC_SKILL)) || flag & SD_ANIMATION )
+				sflag |= SD_ANIMATION; // original target gets no animation (as well as all NPC skills)
 
 			if ( tsc && tsc->data[SC_HOVERING] && (skill_id == SR_WINDMILL || skill_id == LG_MOONSLASHER) )
 				break;
@@ -5300,6 +5300,7 @@ static int skill_castend_damage_id(struct block_list *src, struct block_list *bl
 		break;
 #else
 		case KN_BOWLINGBASH:
+#endif
 #endif
 		case MS_BOWLINGBASH:
 			{
@@ -8068,6 +8069,29 @@ static int skill_castend_nodamage_id(struct block_list *src, struct block_list *
 				}
 			}
 			break;
+
+#ifdef RENEWAL
+		case BD_LULLABY:
+		case BD_RICHMANKIM:
+		case BD_ETERNALCHAOS:
+		case BD_DRUMBATTLEFIELD:
+		case BD_RINGNIBELUNGEN:
+		case BD_ROKISWEIL:
+		case BD_INTOABYSS:
+		case BD_SIEGFRIED:
+		case BA_DISSONANCE:
+		case BA_POEMBRAGI:
+		case BA_WHISTLE:
+		case BA_ASSASSINCROSS:
+		case BA_APPLEIDUN:
+		case DC_UGLYDANCE:
+		case DC_HUMMING:
+		case DC_DONTFORGETME:
+		case DC_FORTUNEKISS:
+		case DC_SERVICEFORYOU:
+			skill_castend_song(src, skill_id, skill_lv, tick);
+			break;
+#endif
 
 #ifdef RENEWAL
 		case BD_LULLABY:
