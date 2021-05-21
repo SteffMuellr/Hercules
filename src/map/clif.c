@@ -7838,6 +7838,30 @@ static void clif_autospell(struct map_session_data *sd, uint16 skill_lv)
 	nullpo_retv(sd);
 
 	int fd = sd->fd;
+#ifdef RENEWAL
+	uint16 autospell_skill[][2] = {
+		{ MG_FIREBOLT, 0}, {MG_COLDBOLT, 0}, {MG_LIGHTNINGBOLT, 0},
+		{MG_SOULSTRIKE, 3}, {MG_FIREBALL, 3},
+		{WZ_EARTHSPIKE, 6}, {MG_FROSTDIVER, 6},
+		{MG_THUNDERSTORM, 9}, {WZ_HEAVENDRIVE, 9}
+	};
+
+	WFIFOHEAD(fd, 2 * 6 + 4);
+	WFIFOW(fd, 0) = 0x442;
+
+	int count = 0;
+	for ( int i = 0; i < ARRAYLENGTH(autospell_skill); ++i ) {
+		if ( skill_lv > autospell_skill[i][1] && pc->checkskill(sd, autospell_skill[i][0]) ) {
+			//WFIFOW(fd, 8 + count * 2) = autospell_skill[i][0];
+			++count;
+		}
+	}
+
+	WFIFOW(fd, 2) = 8 + count * 2;
+	WFIFOL(fd, 4) = count;
+
+	WFIFOSET(fd, WFIFOW(fd, 2));
+#else
 #if PACKETVER_MAIN_NUM >= 20181128 || PACKETVER_RE_NUM >= 20181031
 	// reserve space for 7 skills
 	WFIFOHEAD(fd, sizeof(struct PACKET_ZC_AUTOSPELLLIST) + 4 * 7);
@@ -7871,7 +7895,7 @@ static void clif_autospell(struct map_session_data *sd, uint16 skill_lv)
 	const int len = sizeof(struct PACKET_ZC_AUTOSPELLLIST);
 #endif
 	WFIFOSET(fd, len);
-
+#endif
 	sd->menuskill_id = SA_AUTOSPELL;
 	sd->menuskill_val = skill_lv;
 #endif
@@ -13017,7 +13041,11 @@ static void clif_parse_UseSkillToPos_homun(struct homun_data *hd, struct map_ses
 		return;
 	}
 
+#ifdef RENEWAL
+	if(hd->sc.data[SC_BASILICA_CELL] )
+#else
 	if( hd->sc.data[SC_BASILICA] )
+#endif
 		return;
 	lv = homun->checkskill(hd, skill_id);
 	if( skill_lv > lv )
@@ -13064,7 +13092,11 @@ static void clif_parse_UseSkillToPos_mercenary(struct mercenary_data *md, struct
 		return;
 	}
 
+#ifdef RENEWAL
+	if (md->sc.data[SC_BASILICA_CELL] )
+#else
 	if( md->sc.data[SC_BASILICA] )
+#endif
 		return;
 	lv = mercenary->checkskill(md, skill_id);
 	if( skill_lv > lv )
@@ -13154,8 +13186,10 @@ static void clif_useSkillToIdReal(int fd, struct map_session_data *sd, int skill
 	if (sd->sc.option & OPTION_COSTUME)
 		return;
 
+#ifndef RENEWAL
 	if (sd->sc.data[SC_BASILICA] && (skill_id != HP_BASILICA || sd->sc.data[SC_BASILICA]->val4 != sd->bl.id))
 		return; // On basilica only caster can use Basilica again to stop it.
+#endif
 
 	if (sd->menuskill_id) {
 		if (sd->menuskill_id == SA_TAMINGMONSTER) {
@@ -13295,8 +13329,10 @@ static void clif_parse_UseSkillToPosSub(int fd, struct map_session_data *sd, uin
 	if( sd->sc.option&OPTION_COSTUME )
 		return;
 
+#ifndef RENEWAL
 	if( sd->sc.data[SC_BASILICA] && (skill_id != HP_BASILICA || sd->sc.data[SC_BASILICA]->val4 != sd->bl.id) )
 		return; // On basilica only caster can use Basilica again to stop it.
+#endif
 
 	if( sd->menuskill_id ) {
 		if( sd->menuskill_id == SA_TAMINGMONSTER ) {
@@ -20334,7 +20370,7 @@ static int clif_skill_itemlistwindow(struct map_session_data *sd, uint16 skill_i
 
 static void clif_parse_SkillSelectMenu(int fd, struct map_session_data *sd) __attribute__((nonnull (2)));
 /*==========================================
- * used by SC_AUTOSHADOWSPELL
+ * used by SC_AUTOSHADOWSPELL & SA_AUTOSPELL
  * RFIFOL(fd,2) - flag (currently not used)
  *------------------------------------------*/
 static void clif_parse_SkillSelectMenu(int fd, struct map_session_data *sd)
@@ -20342,16 +20378,18 @@ static void clif_parse_SkillSelectMenu(int fd, struct map_session_data *sd)
 	if (sd->state.trading || pc_isdead(sd) || pc_isvending(sd))
 		return;
 
-	if (sd->menuskill_id != SC_AUTOSHADOWSPELL)
+	if ( sd->menuskill_id == SA_AUTOSPELL ) {
+		sd->state.workinprogress = 0;
+		skill->autospell(sd, RFIFOW(fd, 6));
+	} else if (sd->menuskill_id == SC_AUTOSHADOWSPELL) {
+		if ( pc_istrading_except_npc(sd) || sd->state.prevend != 0 || (sd->npc_id != 0 && sd->state.using_megaphone == 0) ) {
+			clif->skill_fail(sd, sd->ud.skill_id, 0, 0, 0);
+			clif_menuskill_clear(sd);
+			return;
+		}
+		skill->select_menu(sd, RFIFOW(fd, 6));
+	} else
 		return;
-
-	if (pc_istrading_except_npc(sd) || sd->state.prevend != 0 || (sd->npc_id != 0 && sd->state.using_megaphone == 0)) {
-		clif->skill_fail(sd, sd->ud.skill_id, 0, 0, 0);
-		clif_menuskill_clear(sd);
-		return;
-	}
-
-	skill->select_menu(sd,RFIFOW(fd,6));
 
 	clif_menuskill_clear(sd);
 }

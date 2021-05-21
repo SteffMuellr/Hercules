@@ -1256,13 +1256,17 @@ static int unit_can_move(struct block_list *bl)
 		    ||  sc->data[SC_BLADESTOP]
 		    ||  sc->data[SC_BLADESTOP_WAIT]
 		    || (sc->data[SC_GOSPEL] && sc->data[SC_GOSPEL]->val4 == BCT_SELF) // cannot move while gospel is in effect
+#ifndef RENEWAL
 		    || (sc->data[SC_BASILICA] && sc->data[SC_BASILICA]->val4 == bl->id) // Basilica caster cannot move
+#endif
 		    ||  sc->data[SC_STOP]
 			|| sc->data[SC_FALLENEMPIRE]
 		    ||  sc->data[SC_RG_CCONFINE_M]
 		    ||  sc->data[SC_RG_CCONFINE_S]
 		    ||  sc->data[SC_GS_MADNESSCANCEL]
+#ifndef RENEWAL
 		    || (sc->data[SC_GRAVITATION] && sc->data[SC_GRAVITATION]->val3 == BCT_SELF)
+#endif
 		    ||  sc->data[SC_WHITEIMPRISON]
 		    ||  sc->data[SC_ELECTRICSHOCKER]
 		    ||  sc->data[SC_WUGBITE]
@@ -1286,8 +1290,10 @@ static int unit_can_move(struct block_list *bl)
 		    || (
 		         sc->data[SC_DANCING] && sc->data[SC_DANCING]->val4
 		         && (
-		               !sc->data[SC_LONGING]
-		            || (sc->data[SC_DANCING]->val1&0xFFFF) == CG_MOONLIT
+#ifndef RENEWAL
+		               !sc->data[SC_LONGING] ||
+#endif
+		            (sc->data[SC_DANCING]->val1&0xFFFF) == CG_MOONLIT
 		            || (sc->data[SC_DANCING]->val1&0xFFFF) == CG_HERMODE
 		            )
 		       )
@@ -1679,10 +1685,12 @@ static int unit_skilluse_id2(struct block_list *src, int target_id, uint16 skill
 		if (sc && sc->data[SC_RUN])
 			casttime = -1;
 	break;
+#ifndef RENEWAL
 	case HP_BASILICA:
 		if( sc && sc->data[SC_BASILICA] )
 			casttime = -1; // No Casting time on basilica cancel
 	break;
+#endif
 	case KN_CHARGEATK:
 		{
 		unsigned int k = (distance_bl(src,target)-1)/3; //+100% every 3 cells of distance
@@ -2623,7 +2631,11 @@ static int unit_remove_map(struct block_list *bl, enum clr_type clrtype, const c
 	ud->attackabletime = ud->canmove_tick /*= ud->canact_tick*/ = timer->gettick();
 	if(sc && sc->count ) { //map-change/warp dispells.
 		status_change_end(bl, SC_BLADESTOP, INVALID_TIMER);
+#ifdef RENEWAL
+		status_change_end(bl, SC_BASILICA_CELL, INVALID_TIMER);
+#else
 		status_change_end(bl, SC_BASILICA, INVALID_TIMER);
+#endif
 		status_change_end(bl, SC_ANKLESNARE, INVALID_TIMER);
 		status_change_end(bl, SC_TRICKDEAD, INVALID_TIMER);
 		status_change_end(bl, SC_BLADESTOP_WAIT, INVALID_TIMER);

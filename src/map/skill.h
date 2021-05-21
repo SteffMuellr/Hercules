@@ -174,6 +174,22 @@ enum cast_enum {
 	CAST_NODAMAGE
 };
 
+// Ring of Nibelungen bonuses
+enum nibelungen_status {
+	RINGNBL_ASPDRATE = 1,	// ASPD + 20%
+	RINGNBL_ATKRATE,		// Physical damage + 20%
+	RINGNBL_MATKRATE,		// MATK + 20%
+	RINGNBL_HPRATE,			// Maximum HP + 30%
+	RINGNBL_SPRATE,			// Maximum SP + 30%
+	RINGNBL_ALLSTAT,		// All stats + 15
+	RINGNBL_HIT,			// HIT + 50
+	RINGNBL_FLEE,			// FLEE + 50
+	RINGNBL_SPCONSUM,		// SP consumption - 30%
+	RINGNBL_HPREGEN,		// HP recovery + 100%
+	RINGNBL_SPREGEN,		// SP recovery + 100%
+	RINGNBL_MAX,
+};
+
 enum wl_spheres {
 	WLS_FIRE = 0x44,
 	WLS_WIND,
@@ -1491,6 +1507,8 @@ enum e_skill {
 	SU_SPIRITOFLAND,
 	SU_CHATTERING,
 	SU_SPIRITOFSEA,
+
+	CG_SPECIALSINGER = 5068,
 
 	HLIF_HEAL = 8001,
 	HLIF_AVOID,
