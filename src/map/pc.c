@@ -8880,6 +8880,11 @@ static int pc_itemheal(struct map_session_data *sd, int itemid, int hp, int sp)
 		if (sd->sc.data[SC_BITESCAR]) {
 			hp = 0;
 		}
+
+#ifdef RENEWAL
+		if ( sd->sc.data[SC_APPLEIDUN] )
+			hp += hp * sd->sc.data[SC_APPLEIDUN]->val3 / 100;
+#endif
 		
 		if (sd->sc.data[SC_NO_RECOVER_STATE]) {
 			hp = 0;
@@ -9599,7 +9604,12 @@ static bool pc_can_attack(struct map_session_data *sd, int target_id)
 {
 	nullpo_retr(false, sd);
 
-	if( sd->sc.data[SC_BASILICA] ||
+	if(
+#ifdef RENEWAL
+		sd->sc.data[SC_BASILICA_CELL] ||
+#else
+		sd->sc.data[SC_BASILICA] ||
+#endif
 		sd->sc.data[SC__SHADOWFORM] ||
 		sd->sc.data[SC__MANHOLE] ||
 		sd->sc.data[SC_CURSEDCIRCLE_ATKER] ||
@@ -10563,6 +10573,12 @@ static int pc_unequipitem(struct map_session_data *sd, int n, int flag)
 		status_change_end(&sd->bl, SC_BENEDICTIO, INVALID_TIMER);
 		status_change_end(&sd->bl, SC_ARMOR_RESIST, INVALID_TIMER);
 	}
+
+#ifndef RENEWAL
+	// Remove LK-concentration when switching any gear
+	// How can "not when armor is broken" be accomodated?
+	status_change_end($sd->bl, SC_CONCENTRATION, INVALID_TIMER);
+#endif
 
 #ifdef RENEWAL
 	if (battle->bc->bow_unequip_arrow != 0 && (pos & EQP_ARMS) != 0 && sd->equip_index[EQI_AMMO] > 0)
