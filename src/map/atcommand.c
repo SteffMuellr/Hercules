@@ -7419,16 +7419,6 @@ ACMD(hominfo)
 
 	hd = sd->hd;
 	st = status->get_status_data(&hd->bl);
-
-	// override with player's stats instead
-
-	// This gives fully modified stats
-	st = status->get_status_data(&sd->bl);
-	// this here gives only base-str: 
-	// uint16 baseStr = sd->status.str;
-	// this here gives only permanent modifiers, not buffs/debuffs:
-	// st = &sd->base_status;
-
 	clif->message(fd, msg_fd(fd,1261)); // Homunculus stats:
 
 	snprintf(atcmd_output, sizeof(atcmd_output) ,msg_fd(fd,1262), // HP: %d/%d - SP: %d/%d
@@ -7445,7 +7435,7 @@ ACMD(hominfo)
 
 	snprintf(atcmd_output, sizeof(atcmd_output) ,
 			 msg_fd(fd,1265), // Stats: Str %d / Agi %d / Vit %d / Int %d / Dex %d / Luk %d
-		st->str, st->agi, st->vit,
+			 st->str, st->agi, st->vit,
 			 st->int_, st->dex, st->luk);
 	clif->message(fd, atcmd_output);
 
