@@ -209,7 +209,6 @@ typedef enum sc_type {
 	SC_GOSPEL,
 	SC_ASSUMPTIO,
 	SC_BASILICA,	// prohibits combat in pre-re, buffs damage in Re
-	SC_BASILICA_CELL, // prohibits combat in Re, skill no longer places units with this effect, but scripts might
 	SC_GUILDAURA,
 	SC_MAGICPOWER,
 	SC_EDP,
@@ -865,6 +864,7 @@ typedef enum sc_type {
 	SC_NO_RECOVER_STATE,
 	SC_ADAPTATION,
 	SC_ENSEMBLEFATIGUE,
+	SC_BASILICA_CELL, // prohibits combat in Re, skill no longer places units with this effect, but scripts might
 #ifndef SC_MAX
 	SC_MAX, //Automatically updated max, used in for's to check we are within bounds.
 #endif

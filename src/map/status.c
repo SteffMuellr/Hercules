@@ -945,7 +945,7 @@ static int status_check_skilluse(struct block_list *src, struct block_list *targ
 			//Skills blocked through status changes...
 			if (!flag && ( //Blocked only from using the skill (stuff like autospell may still go through
 #ifndef RENEWAL
-				sc->data[SC_BASILICA] && sc->data[SC_BASILICA]->val4 != src->id || skill_id != HP_BASILICA || // Only Basilica caster can cast, and only Basilica to cancel it
+				(sc->data[SC_BASILICA] && (sc->data[SC_BASILICA]->val4 != src->id || skill_id != HP_BASILICA)) || // Only Basilica caster can cast, and only Basilica to cancel it
 #endif
 				sc->data[SC_SILENCE] ||
 				sc->data[SC_STEELBODY] ||
@@ -5402,6 +5402,9 @@ static short status_calc_aspd(struct block_list *bl, struct status_change *sc, s
 		}
 
 		if (sc->data[SC_ASSNCROS] && bonus < sc->data[SC_ASSNCROS]->val2) {
+#ifdef RENEWAL
+			bonus += sc->data[SC_ASSNCROS]->val2;
+#else
 			if (bl->type != BL_PC) {
 				bonus = sc->data[SC_ASSNCROS]->val2;
 			} else {
@@ -5417,6 +5420,7 @@ static short status_calc_aspd(struct block_list *bl, struct status_change *sc, s
 						bonus = sc->data[SC_ASSNCROS]->val2;
 				}
 			}
+#endif
 		}
 
 		if ((sc->data[SC_BERSERK]) && bonus < 15)
@@ -7781,12 +7785,10 @@ static int status_change_start_sub(struct block_list *src, struct block_list *bl
 				val2 = 2 * val1; // Cast time reduction
 				val3 = 3 * val1; // After-cast delay reduction
 				break;
-#ifndef RENEWAL
 			case SC_APPLEIDUN:
 				val2 = val1 < 10 ? 9 + val1 : 20; // HP rate increase
 				val3 = 2 * val1; // Potion recovery rate
 				break;
-#endif
 			case SC_HUMMING:
 				val2 = 4 * val1; // Hit increase
 				break;
