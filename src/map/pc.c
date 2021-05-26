@@ -10575,7 +10575,7 @@ static int pc_unequipitem(struct map_session_data *sd, int n, int flag)
 #ifndef RENEWAL
 	// Remove LK-concentration when switching any gear
 	// How can "not when armor is broken" be accomodated?
-	status_change_end($sd->bl, SC_CONCENTRATION, INVALID_TIMER);
+	status_change_end(&sd->bl, SC_CONCENTRATION, INVALID_TIMER);
 #endif
 
 #ifdef RENEWAL
