@@ -1618,7 +1618,7 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 			break;
 		case MG_FIREBALL:
 #ifdef RENEWAL
-			skillratio += 20 * skill_lv;
+			skillratio += 40 + 20 * skill_lv;
 #else
 			skillratio += skill_lv * 10 - 30;
 #endif
@@ -2199,7 +2199,11 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 			break;
 		}
 		case AM_DEMONSTRATION:
+#ifdef RENEWAL
+			skillratio += -100 + 60 * skill_lv + pc->checkskill(sd, AM_LEARNINGPOTION) * 10;
+#else
 			skillratio += 20 * skill_lv;
+#endif
 			break;
 		case AM_ACIDTERROR:
 #ifdef RENEWAL
@@ -2334,9 +2338,9 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 			skillratio += 300 + 100 * skill_lv;
 #else
 			skillratio += 400 + 50 * skill_lv;
-#endif
 			if ( sd )
 				skillratio += 20 * pc->checkskill(sd, AS_POISONREACT);
+#endif
 			break;
 #ifndef RENEWAL
 		case ASC_BREAKER:
@@ -3739,6 +3743,12 @@ static int battle_range_type(struct block_list *src, struct block_list *target, 
 			return BF_LONG;
 	}
 
+#ifdef RENEWAL
+	if ( skill_id == KN_BRANDISHSPEAR )
+		// renewal changes to ranged physical damage
+		return BF_LONG;
+#endif
+
 	//based on used skill's range
 	if ( skill->get_range2(src, skill_id, skill_lv) < 5 )
 		return BF_SHORT;
@@ -4711,10 +4721,6 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 			break;
 #endif
 
-#ifdef RENEWAL
-		case KN_BRANDISHSPEAR:
-			wd.flag |= BF_LONG;
-#endif
 		case KN_AUTOCOUNTER:
 			wd.flag = (wd.flag & ~BF_SKILLMASK) | BF_NORMAL;
 			break;
@@ -5346,14 +5352,17 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 		case AM_DEMONSTRATION:
 		case AM_ACIDTERROR: // [malufett/Hercules]
 		{
-			int64 matk;
 			int totaldef = status->get_total_def(target) + status->get_total_mdef(target);
+			GET_NORMAL_ATTACK((sc &&sc->data[SC_MAXIMIZEPOWER] ? 1 : 0) | (sc && sc->data[SC_WEAPONPERFECT] ? 8 : 0), 0);
+			ATK_RATE(battle->calc_skillratio(BF_WEAPON, src, target, skill_id, skill_lv, skillratio, wflag));
+
+#ifndef RENEWAL
+			int64 matk;
 			matk = battle->calc_cardfix(BF_MAGIC, src, target, nk, s_ele, 0, status->get_matk(src, 2), 0, wd.flag);
 			matk = battle->attr_fix(src, target, matk, ELE_NEUTRAL, tstatus->def_ele, tstatus->ele_lv);
 			matk = matk * battle->calc_skillratio(BF_WEAPON, src, target, skill_id, skill_lv, skillratio, wflag) / 100;
-			GET_NORMAL_ATTACK((sc && sc->data[SC_MAXIMIZEPOWER] ? 1 : 0) | (sc && sc->data[SC_WEAPONPERFECT] ? 8 : 0), 0);
-			ATK_RATE(battle->calc_skillratio(BF_WEAPON, src, target, skill_id, skill_lv, skillratio, wflag));
 			ATK_ADD(matk);
+#endif
 			ATK_ADD(-totaldef);
 			if ( skill_id == AM_ACIDTERROR && is_boss(target) )
 				ATK_RATE(50);
