@@ -3717,6 +3717,8 @@ static int status_base_amotion_pc(struct map_session_data *sd, struct status_dat
 		val += ((skill_lv + 1) / 2);
 	if ( (skill_lv = pc->checkskill(sd, RG_PLAGIARISM)) > 0 )
 		val += skill_lv;
+	if ( sd->weapontype == W_MUSICAL && (skill_lv = pc->checkskill(sd, BA_MUSICALLESSON)) > 0 )
+		val += skill_lv;
 	amotion = ((int)(temp + ((float)(status->calc_aspd(&sd->bl, &sd->sc, 1) + val) * st->agi / 200)) - min(amotion, 200));
 #else
 	// base weapon delay
@@ -5499,12 +5501,6 @@ static short status_calc_aspd(struct block_list *bl, struct status_change *sc, s
 			bonus += sc->data[SC_INC_AGI]->val1;
 		if ( sc->data[SC_NIBELUNGEN] && sc->data[SC_NIBELUNGEN]->val2 == RINGNBL_ASPDRATE )
 			bonus += 20;
-
-		struct map_session_data *sd = BL_CAST(BL_PC, bl);
-		uint8 skill_lv;
-
-		if ( sd && (skill_lv = pc->checkskill(sd, BA_MUSICALLESSON)) > 0 )
-			bonus += skill_lv;
 #endif
 		if (sc->data[SC_ACARAJE])
 			bonus += sc->data[SC_ACARAJE]->val2;
