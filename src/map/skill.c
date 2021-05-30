@@ -5273,7 +5273,7 @@ static int skill_castend_damage_id(struct block_list *src, struct block_list *bl
 
 	case KN_BRANDISHSPEAR:
 #ifdef RENEWAL
-		skill_attack(skill->get_type(skill_id, skill_lv), src, src, bl, skill_id, skill_lv, tick, flag);
+		skill->attack(skill->get_type(skill_id, skill_lv), src, src, bl, skill_id, skill_lv, tick, flag);
 		break;
 #endif
 	case ML_BRANDISH:
