@@ -4928,7 +4928,7 @@ static defType status_calc_def(struct block_list *bl, struct status_change *sc, 
 
 	if (sc->data[SC_STONEHARDSKIN])
 		def += sc->data[SC_STONEHARDSKIN]->val1;
-	if (sc->data[SC_DRUMBATTLE])
+	if ( sc->data[SC_DRUMBATTLE] )
 		def += sc->data[SC_DRUMBATTLE]->val3;
 
 	if (sc->data[SC_STONESKIN])
@@ -7796,7 +7796,7 @@ static int status_change_start_sub(struct block_list *src, struct block_list *bl
 				val3 = val1 * 5; // Status ailment resistance
 				break;
 			case SC_WHISTLE:
-				val2 = 18 + 2 * val1; // Flee increase
+				val2 = val1 < 10 ? 18 + 2 * val1 : 40; // Flee increase
 				val3 = (val1 + 1) / 2; // Perfect dodge increase
 				break;
 			case SC_ASSNCROS:

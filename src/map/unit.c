@@ -1546,7 +1546,11 @@ static int unit_skilluse_id2(struct block_list *src, int target_id, uint16 skill
 	// Record the status of the previous skill)
 	if (sd) {
 
+#ifdef RENEWAL
+		if ( (skill->get_inf2(skill_id) & INF2_ENSEMBLE_SKILL) && skill->check_pc_partner(sd, skill_id, &skill_lv, 3, 0) < 1 ) {
+#else
 		if ((skill->get_inf2(skill_id)&INF2_ENSEMBLE_SKILL) && skill->check_pc_partner(sd, skill_id, &skill_lv, 1, 0) < 1) {
+#endif
 			clif->skill_fail(sd, skill_id, USESKILL_FAIL_LEVEL, 0, 0);
 			return 0;
 		}

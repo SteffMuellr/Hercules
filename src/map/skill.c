@@ -1248,6 +1248,8 @@ static int skill_calc_heal(struct block_list *src, struct block_list *target, ui
 #ifdef RENEWAL
 		if(sc->data[SC_ASSUMPTIO] )
 			hp = hp * sc->data[SC_ASSUMPTIO]->val1 * 2;
+		if ( sc->data[SC_APPLEIDUN] )
+			hp = hp * sc->data[SC_APPLEIDUN]->val1 * 2;
 #endif
 	}
 
@@ -6223,7 +6225,7 @@ static int skill_apply_songs(struct block_list *target, va_list ap) {
 		default: // Buff/Debuff type songs
 			if ( skill_id == CG_HERMODE && src->id != target->id )
 				status->change_clear_buffs(target, 1); // Dispell only allies
-			return sc_start(src, target, skill_get_sc_type(skill_id), 100, skill_lv, skill_get_time(skill_id, skill_lv));
+			return sc_start(src, target, skill->get_sc_type(skill_id), 100, skill_lv, skill->get_time(skill_id, skill_lv));
 		}
 	}
 
@@ -6246,7 +6248,7 @@ static int skill_castend_song(struct block_list *src, uint16 skill_id, uint16 sk
 		return 0;
 	}
 
-	int inf2 = skill_get_inf2(skill_id);
+	int inf2 = skill->get_inf2(skill_id);
 	if ( !(inf2 & INF2_SONG_DANCE || inf2 & INF2_ENSEMBLE_SKILL) ) {
 		ShowWarning("skill_castend_song: Unknown song skill ID: %u\n", skill_id);
 		return 0;
@@ -6276,7 +6278,7 @@ static int skill_castend_song(struct block_list *src, uint16 skill_id, uint16 sk
 	sd->skill_lv_dance = skill_lv;
 
 	if ( inf2 & INF2_ENSEMBLE_SKILL ) {
-		skill_check_pc_partner(sd, skill_id, &skill_lv, 3, 1);
+		skill->check_pc_partner(sd, skill_id, &skill_lv, 3, 1);
 	}
 
 	return map->foreachinrange(skill_apply_songs, src, skill_get_splash(skill_id, skill_lv), skill_splash_target(src), flag, src, skill_id, skill_lv, tick);
@@ -6406,6 +6408,19 @@ static int skill_castend_id(int tid, int64 tick, int id, intptr_t data)
 			if( !battle->check_undead(tstatus->race, tstatus->def_ele) )
 				break;
 		}
+
+#ifdef RENEWAL
+		if ( ud->skill_id == BA_DISSONANCE ||
+			ud->skill_id == DC_UGLYDANCE ||
+			ud->skill_id == DC_DONTFORGETME ||
+			ud->skill_id == BD_ROKISWEIL ||
+			ud->skill_id == BD_ETERNALCHAOS) {
+			if ( !(map->list[sd->bl.m].flag.pvp || map->list[sd->bl.m].flag.gvg) ) {
+				clif->skill_fail(sd, ud->skill_id, USESKILL_FAIL_CONDITION, 0, 0);
+				break; // these skills are only available in pvp/gvg
+			}
+		}
+#endif
 
 		if( ud->skill_id == RA_WUGSTRIKE ){
 			if( !path->search(NULL,src,src->m,src->x,src->y,target->x,target->y,1,CELL_CHKNOREACH))
@@ -8004,9 +8019,9 @@ static int skill_castend_nodamage_id(struct block_list *src, struct block_list *
 			}
 			break;
 		case CG_SPECIALSINGER:
-			if ( tsc && tsc->data[SC_LONGING] ) {
+			if ( tsc && tsc->data[SC_ENSEMBLEFATIGUE] ) {
 				clif->skill_nodamage(src, bl, skill_id, skill_lv, 1);
-				status_change_end(bl, SC_LONGING, INVALID_TIMER);
+				status_change_end(bl, SC_ENSEMBLEFATIGUE, INVALID_TIMER);
 			}
 			break;
 		case BD_ADAPTATION:
@@ -13201,8 +13216,13 @@ static struct skill_unit_group *skill_unitsetting(struct block_list *src, uint16
 			val1*=10; //Because every 10 crit is an actual cri point.
 			break;
 		case BD_DRUMBATTLEFIELD:
+#ifdef RENEWAL
+			val1 = 125 + skill_lv * 25; //Watk increase
+			val2 = 15 * skill_lv; //Def increase
+#else
 			val1 = (skill_lv+1)*25; //Watk increase
 			val2 = (skill_lv+1)*2; //Def increase
+#endif
 			break;
 		case BD_RINGNIBELUNGEN:
 			val1 = (skill_lv+2)*25; //Watk increase
@@ -15005,13 +15025,27 @@ static int skill_check_pc_partner(struct map_session_data *sd, uint16 skill_id, 
 			default:
 				if( is_chorus )
 					break;//Chorus skills are not to be parsed as ensambles
+				int inf2 = skill->get_inf2(skill_id);
 				if ( skill->get_inf2(skill_id) & INF2_ENSEMBLE_SKILL ) {
-					if ( c > 0 && sd->sc.data[SC_DANCING] && (tsd = map->id2sd(p_sd[0])) != NULL ) {
+					struct status_change_entry *sce = sd->sc.data[SC_DANCING];
+					tsd = map->id2sd(p_sd[0]);
+					if ( c > 0
+#ifndef RENEWAL
+					&& sd->sc.data[SC_DANCING]
+#endif		
+					&& (tsd = map->id2sd(p_sd[0])) != NULL ) {
+#ifndef RENEWAL
 						sd->sc.data[SC_DANCING]->val4 = tsd->bl.id;
 						sc_start4(&tsd->bl, &tsd->bl, SC_DANCING, 100, skill_id, sd->sc.data[SC_DANCING]->val2, *skill_lv, sd->bl.id, skill->get_time(skill_id, *skill_lv) + 1000);
+#endif
 						clif->skill_nodamage(&tsd->bl, &sd->bl, skill_id, *skill_lv, 1);
 						tsd->skill_id_dance = skill_id;
 						tsd->skill_lv_dance = *skill_lv;
+
+#ifdef RENEWAL
+						sc_start(&sd->bl, &sd->bl, SC_ENSEMBLEFATIGUE, 100, 1, skill_get_time(CG_SPECIALSINGER, *skill_lv));
+						sc_start(&sd->bl, &tsd->bl, SC_ENSEMBLEFATIGUE, 100, 1, skill_get_time(CG_SPECIALSINGER, *skill_lv));
+#endif
 					}
 				}
 				return c;

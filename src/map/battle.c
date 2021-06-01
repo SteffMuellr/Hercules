@@ -873,13 +873,8 @@ static int64 battle_calc_masteryfix(struct block_list *src, struct block_list *t
 #ifdef RENEWAL
 		if ( sc->data[SC_NIBELUNGEN] && weapon )
 			damage += sc->data[SC_NIBELUNGEN]->val2;
-		if ( sc->data[SC_DRUMBATTLE] ) {
-			if ( tstatus->size == SZ_SMALL )
-				damage += sc->data[SC_DRUMBATTLE]->val2;
-			else if ( tstatus->size == SZ_MEDIUM )
-				damage += 10 * sc->data[SC_DRUMBATTLE]->val1;
-			//else no bonus for large target
-		}
+		if ( sc->data[SC_DRUMBATTLE] )
+			damage += sc->data[SC_DRUMBATTLE]->val2;
 		if ( sc->data[SC_GS_MADNESSCANCEL] )
 			damage += 100;
 		if ( sc->data[SC_GS_GATLINGFEVER] ) {
@@ -1761,9 +1756,7 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 				skillratio += 20 * sd->charm_count;
 			break;
 		case BA_DISSONANCE:
-			skillratio += skill_lv * 10;
-			if ( sd )
-				skillratio += 3 * pc->checkskill(sd, BA_MUSICALLESSON);
+			skillratio += skill_lv * 10; // Effect of Joblevel on the damage (only mentioned in patchnotes, not wiki) is unknown
 			break;
 		case HW_GRAVITATION:
 			skillratio += -100 + 50 * skill_lv;
