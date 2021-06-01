@@ -6414,6 +6414,19 @@ static int skill_castend_id(int tid, int64 tick, int id, intptr_t data)
 				break;
 		}
 
+#ifdef RENEWAL
+		if ( ud->skill_id == BA_DISSONANCE ||
+			ud->skill_id == DC_UGLYDANCE ||
+			ud->skill_id == DC_DONTFORGETME ||
+			ud->skill_id == BD_ROKISWEIL ||
+			ud->skill_id == BD_ETERNALCHAOS) {
+			if ( !(map->list[sd->bl.m].flag.pvp || map->list[sd->bl.m].flag.gvg) ) {
+				clif->skill_fail(sd, ud->skill_id, USESKILL_FAIL_CONDITION, 0, 0);
+				break; // these skills are only available in pvp/gvg
+			}
+		}
+#endif
+
 		if( ud->skill_id == RA_WUGSTRIKE ){
 			if( !path->search(NULL,src,src->m,src->x,src->y,target->x,target->y,1,CELL_CHKNOREACH))
 				break;
