@@ -2148,15 +2148,9 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 			skillratio += 100 + 100 * skill_lv + 100 * (skill_lv / 2);
 			break;
 		case RG_BACKSTAP:
+			skillratio += 200 + 40 * skill_lv; // doubled damage is covered by increasing the div of the attack
 			if ( sd != NULL && sd->weapontype == W_BOW && battle_config.backstab_bow_penalty )
-				skillratio += (200 + 40 * skill_lv) / 2;
-			else {
-				skillratio += 200 + 40 * skill_lv;
-#ifdef RENEWAL
-				if ( sd != NULL && sd->weapontype == W_DAGGER )
-					skillratio <<= 1;
-#endif
-			}
+				skillratio >>= 1;
 			break;
 		case RG_RAID:
 #ifdef RENEWAL
@@ -2175,10 +2169,14 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 		case CR_SHIELDBOOMERANG:
 #ifdef RENEWAL
 			skillratio += -100 + 80 * skill_lv;
+			short index = sd->equip_index[EQI_HAND_L];
+			if ( index >= 0 && sd->inventory_data[index] && sd->inventory_data[index]->type == IT_ARMOR ) {
+				skillratio += sd->inventory_data[index]->weight / 10;
+				skillratio += sd->status.inventory[index].refine * 5;
+			}
 #else
 			skillratio += 30 * skill_lv;
 #endif
-
 			break;
 		case NPC_DARKCROSS:
 		case CR_HOLYCROSS:
@@ -2237,7 +2235,7 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 				skillratio = (unsigned short)ratio;
 			}
 #else
-			if ( flag & 1 ) // more than 5 spirit balls active
+			if ( flag & 1 ) // more than 5 spirit balls active, even though this formula is never reached for some reason. 
 				skillratio <<= 1;
 #endif
 			break;
@@ -3219,7 +3217,7 @@ static int64 battle_calc_damage(struct block_list *src, struct block_list *bl, s
 
 #ifdef RENEWAL
 		if ( sc->data[SC_RAID] ) {
-			if ( status_get_mode(src) & MD_BOSS )
+			if ( status_get_mode(bl) & MD_BOSS )
 				damage += damage * 15 / 100;
 			else
 				damage += damage * 30 / 100;
@@ -4718,6 +4716,18 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 			wd.flag = (wd.flag & ~BF_SKILLMASK) | BF_NORMAL;
 			break;
 
+#ifdef RENEWAL
+		case MO_CHAINCOMBO:
+			if ( sd && sd->weapontype == W_KNUCKLE )
+				wd.div_ = -6;
+			break;
+
+		case RG_BACKSTAP:
+			if ( sd && sd->weapontype == W_DAGGER )
+				wd.div_ = 2;
+			break;
+#endif
+
 		case NPC_CRITICALSLASH:
 		case LG_PINPOINTATTACK:
 			flag.cri = 1; //Always critical skill.
@@ -5176,7 +5186,6 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 			break;
 
 		case PA_SHIELDCHAIN:
-#endif
 		case CR_SHIELDBOOMERANG:
 			wd.damage = sstatus->batk;
 			if ( sd ) {
@@ -5189,6 +5198,7 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 			} else
 				ATK_ADD(sstatus->rhw.atk2); //Else use Atk2
 			break;
+#endif
 		case HFLI_SBR44: //[orn]
 			if ( src->type == BL_HOM ) {
 				const struct homun_data *hd = BL_UCCAST(BL_HOM, src);
@@ -5328,6 +5338,10 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 			if ( wd.damage ) {
 				ATK_ADD(250 * (skill_lv + 1) + (10 * (status_get_sp(src) + 1) * wd.damage / 100) + (8 * wd.damage));
 				ATK_ADD(-totaldef);
+#ifdef RENEWAL
+				if ( wflag & 1 )
+					ATK_ADDRATE(100);
+#endif
 			}
 		}
 		break;
