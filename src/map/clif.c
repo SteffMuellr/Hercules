@@ -7833,11 +7833,13 @@ static void clif_pet_food(struct map_session_data *sd, int foodid, int fail)
 }
 
 /// Presents a list of skills that can be auto-spelled (ZC_AUTOSPELLLIST).
+/// retValue: number of autocastable skills
 /// 01cd { <skill id>.L }*7
-static void clif_autospell(struct map_session_data *sd, uint16 skill_lv)
+static int clif_autospell(struct map_session_data *sd, uint16 skill_lv)
 {
+	int retval = 0;
 #if PACKETVER_MAIN_NUM >= 20090406 || defined(PACKETVER_RE) || defined(PACKETVER_ZERO) || PACKETVER_SAK_NUM >= 20080618
-	nullpo_retv(sd);
+	nullpo_ret(sd);
 
 	int fd = sd->fd;
 #ifdef RENEWAL
@@ -7848,13 +7850,13 @@ static void clif_autospell(struct map_session_data *sd, uint16 skill_lv)
 		{MG_THUNDERSTORM, 9}, {WZ_HEAVENDRIVE, 9}
 	};
 
-	WFIFOHEAD(fd, 2 * 6 + 4);
+	WFIFOHEAD(fd, 8 + 2 * 9);
 	WFIFOW(fd, 0) = 0x442;
 
 	int count = 0;
 	for ( int i = 0; i < ARRAYLENGTH(autospell_skill); ++i ) {
 		if ( skill_lv > autospell_skill[i][1] && pc->checkskill(sd, autospell_skill[i][0]) ) {
-			//WFIFOW(fd, 8 + count * 2) = autospell_skill[i][0];
+			WFIFOW(fd, 8 + count * 2) = autospell_skill[i][0];
 			++count;
 		}
 	}
@@ -7862,6 +7864,7 @@ static void clif_autospell(struct map_session_data *sd, uint16 skill_lv)
 	WFIFOW(fd, 2) = 8 + count * 2;
 	WFIFOL(fd, 4) = count;
 
+	retval = count;
 	WFIFOSET(fd, WFIFOW(fd, 2));
 #else
 #if PACKETVER_MAIN_NUM >= 20181128 || PACKETVER_RE_NUM >= 20181031
@@ -7890,6 +7893,7 @@ static void clif_autospell(struct map_session_data *sd, uint16 skill_lv)
 	if (skill_lv > 9 && pc->checkskill(sd, MG_FROSTDIVER) > 0)
 		p->skills[index++] = MG_FROSTDIVER;
 
+	retval = index;
 #if PACKETVER_MAIN_NUM >= 20181128 || PACKETVER_RE_NUM >= 20181031
 	const int len = sizeof(struct PACKET_ZC_AUTOSPELLLIST) + index * 4;
 	p->packetLength = len;
@@ -7901,6 +7905,7 @@ static void clif_autospell(struct map_session_data *sd, uint16 skill_lv)
 	sd->menuskill_id = SA_AUTOSPELL;
 	sd->menuskill_val = skill_lv;
 #endif
+	return retval;
 }
 
 /// Devotion's visual effect (ZC_DEVOTIONLIST).

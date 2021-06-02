@@ -1884,7 +1884,7 @@ static int skill_additional_effect(struct block_list *src, struct block_list *bl
 			sc_start(src,bl,SC_STUN,(10+3*skill_lv),skill_lv,skill->get_time(skill_id,skill_lv));
 			sc_start(src,bl,SC_BLIND,(10+3*skill_lv),skill_lv,skill->get_time2(skill_id,skill_lv));
 #ifdef RENEWAL
-			sc_start(src,bl,SC_RAID,100,skill_lv,10000); // hardcoded to 10 seconds because get_time and get_time2 area already used
+			sc_start(src,bl,SC_RAID,100,skill_lv,10000); // hardcoded to 10 seconds because get_time and get_time2 are already used
 			break;
 
 		case RG_BACKSTAP:
@@ -5025,7 +5025,7 @@ static int skill_castend_damage_id(struct block_list *src, struct block_list *bl
 			else
 				y = 0;
 
-			if ( battle->check_target(src, bl, BCT_ENEMY) > 0 && unit->move_pos(src, bl->x + x, bl->y + y, 1, true) ) {
+			if ( battle->check_target(src, bl, BCT_ENEMY) > 0 && unit->move_pos(src, bl->x + x, bl->y + y, 1, true) == 0 ) {
 #else
 			enum unit_dir t_dir = unit->getdir(bl);
 			if ( map->check_dir(dir, t_dir) == 0 || bl->type == BL_SKILL ) {
@@ -5037,9 +5037,11 @@ static int skill_castend_damage_id(struct block_list *src, struct block_list *bl
 				clif->blown(src);
 #endif
 				skill->attack(BF_WEAPON, src, src, bl, skill_id, skill_lv, tick, flag);
-			} 					else if ( sd )
+			}
+			else if ( sd )
 				clif->skill_fail(sd, skill_id, USESKILL_FAIL_LEVEL, 0, 0);
-		}
+		} else
+			clif->skill_fail(sd, skill_id, USESKILL_FAIL_LEVEL, 0, 0); // when on same cell as enemy, backstab behaviour is illdefined, so we fail
 	}
 	break;
 
@@ -7255,33 +7257,41 @@ static int skill_castend_nodamage_id(struct block_list *src, struct block_list *
 		case SA_LIGHTNINGLOADER:
 		case SA_SEISMICWEAPON:
 			if (dstsd) {
-				if (dstsd->weapontype == W_FIST ||
-					(dstsd->sc.count && !dstsd->sc.data[type] &&
-					( //Allow re-enchanting to lengthen time. [Skotlex]
-						dstsd->sc.data[SC_PROPERTYFIRE] ||
-						dstsd->sc.data[SC_PROPERTYWATER] ||
-						dstsd->sc.data[SC_PROPERTYWIND] ||
-						dstsd->sc.data[SC_PROPERTYGROUND] ||
-						dstsd->sc.data[SC_PROPERTYDARK] ||
-						dstsd->sc.data[SC_PROPERTYTELEKINESIS] ||
-						dstsd->sc.data[SC_ENCHANTPOISON]
+				if (dstsd->weapontype == W_FIST
+#ifndef RENEWAL // disable non-official behaviour that forbids overwriting / refreshing enchants (reference: rAthena)
+					|| (dstsd->sc.count // target got buffs
+						&& !dstsd->sc.data[type] // and target does not already have this enchantment
+						&& // and target has _any_ enchantment
+						( //Allow re-enchanting to lengthen time. [Skotlex] << This code actually forbids re-enchanting. [Owlrrex]
+							dstsd->sc.data[SC_PROPERTYFIRE] ||
+							dstsd->sc.data[SC_PROPERTYWATER] ||
+							dstsd->sc.data[SC_PROPERTYWIND] ||
+							dstsd->sc.data[SC_PROPERTYGROUND] ||
+							dstsd->sc.data[SC_PROPERTYDARK] ||
+							dstsd->sc.data[SC_PROPERTYTELEKINESIS] ||
+							dstsd->sc.data[SC_ENCHANTPOISON]
 					))
-					) {
+#endif
+				) {
 					if (sd) clif->skill_fail(sd, skill_id, USESKILL_FAIL_LEVEL, 0, 0);
 					clif->skill_nodamage(src,bl,skill_id,skill_lv,0);
 					break;
 				}
 			}
 
+
 #ifdef RENEWAL
 			clif->skill_nodamage(src, bl, skill_id, skill_lv, sc_start(src, bl, type, 100, skill_lv, skill->get_time(skill_id, skill_lv)));
 #else
 			// 100% success rate at lv4 & 5, but lasts longer at lv5
 			if(!clif->skill_nodamage(src,bl,skill_id,skill_lv, sc_start(src,bl,type,(60+skill_lv*10),skill_lv, skill->get_time(skill_id,skill_lv)))) {
+				if ( dstst ) {
+					short index = sdtsd->equip_index[EQI_HAND_R];
+					if ( index & EQP_WEAPON && dstsd->inventory_data[index]->type == IT_WEAPON )
+						pc_unequipitem(dstsd, index, 3); // Official behaviour is removing wepaon instead of breaking it (Irowiki)
+				}
 				if (sd)
 					clif->skill_fail(sd, skill_id, USESKILL_FAIL_LEVEL, 0, 0);
-				if (skill->break_equip(bl, EQP_WEAPON, 10000, BCT_PARTY) && sd && sd != dstsd)
-					clif->message(sd->fd, msg_sd(sd,869)); // "You broke the target's weapon."
 			}
 #endif
 			break;
@@ -8791,8 +8801,8 @@ static int skill_castend_nodamage_id(struct block_list *src, struct block_list *
 		case SA_AUTOSPELL:
 			clif->skill_nodamage(src,bl,skill_id,skill_lv,1);
 			if(sd){
-				sd->state.workinprogress = 3;
-				clif->autospell(sd,skill_lv);
+				if( clif->autospell(sd, skill_lv) > 0)
+					sd->state.workinprogress = 3;
 			}else {
 				int maxlv=1,spellid=0;
 				static const int spellarray[3] = { MG_COLDBOLT,MG_FIREBOLT,MG_LIGHTNINGBOLT };
@@ -13933,8 +13943,8 @@ static int skill_unit_onplace_timer(struct skill_unit *src, struct block_list *b
 				status->heal(bl, heal, 0, STATUS_HEAL_DEFAULT);
 			}
 			break;
-#ifndef RENEWAL
 		case UNT_MAGNUS:
+#ifndef RENEWAL
 			if (!battle->check_undead(tstatus->race,tstatus->def_ele) && tstatus->race!=RC_DEMON)
 				break;
 #endif
@@ -16840,8 +16850,13 @@ static struct skill_condition skill_get_requirement(struct map_session_data *sd,
 				req.sp -= req.sp*3*kaina_lv/100;
 		}
 			break;
-		case MO_TRIPLEATTACK:
 		case MO_CHAINCOMBO:
+#ifdef RENEWAL
+			if ( sd->weapontype == W_KNUCKLE )
+				req.sp = max(req.sp - 6, 0);
+			FALLTHROUGH
+#endif
+		case MO_TRIPLEATTACK:
 		case MO_COMBOFINISH:
 		case CH_TIGERFIST:
 		case CH_CHAINCRUSH:
@@ -17076,7 +17091,9 @@ static int skill_vfcastfix(struct block_list *bl, double time, uint16 skill_id, 
 		// Variable cast reduction bonuses
 		if (sc->data[SC_SUFFRAGIUM]) {
 			VARCAST_REDUCTION(sc->data[SC_SUFFRAGIUM]->val2);
+#ifndef RENEWAL
 			status_change_end(bl, SC_SUFFRAGIUM, INVALID_TIMER);
+#endif
 		}
 		if (sc->data[SC_MEMORIZE]) {
 			VARCAST_REDUCTION(50);

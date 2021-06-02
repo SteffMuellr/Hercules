@@ -999,7 +999,9 @@ static int status_check_skilluse(struct block_list *src, struct block_list *targ
 			switch (skill_id) { //Usable skills while hiding.
 				case TF_HIDING:
 				case AS_GRIMTOOTH:
+#ifndef RENEWAL
 				case RG_BACKSTAP:
+#endif
 				case RG_RAID:
 				case NJ_SHADOWJUMP:
 				case NJ_KIRIKAGE:
@@ -4467,6 +4469,8 @@ static int status_calc_watk(struct block_list *bl, struct status_change *sc, int
 #endif
 	if ( sc->data[SC_IMPOSITIO] )
 		watk += sc->data[SC_IMPOSITIO]->val2;
+	if ( sc->data[SC_VOLCANO] )
+		watk += sc->data[SC_VOLCANO]->val2;
 	if(sc->data[SC_WATKFOOD])
 		watk += sc->data[SC_WATKFOOD]->val1;
 	if(sc->data[SC_MER_ATK])
@@ -4567,12 +4571,8 @@ static int status_calc_ematk(struct block_list *bl, struct status_change *sc, in
 		matk += matk * sc->data[SC_SHRIMP]->val2 / 100;
 	if ( sc->data[SC_VOLCANO] )
 		matk += sc->data[SC_VOLCANO]->val2;
-#ifdef RENEWAL
-	if ( sc->data[SC_VOLCANO] )
-		matk += sc->data[SC_VOLCANO]->val2;
 	if ( sc->data[SC_NIBELUNGEN] && sc->data[SC_NIBELUNGEN]->val2 == RINGNBL_MATKRATE )
 		matk += matk * 20 / 100;
-#endif
 
 	return cap_value(matk, battle_config.matk_min, battle_config.matk_max);
 #else
@@ -5523,7 +5523,7 @@ static short status_calc_aspd(struct block_list *bl, struct status_change *sc, s
 		// It seems neither Athena nor Herc have this 10% bonus in their code, so this behaviour may confuse players.
 #ifdef RENEWAL
 #ifdef RENEWAL_ASPD
-		if ( sc->data[SC_TWOHANDQUICKEN] || sc->data[SC_SPEARQUICKEN] )
+		if ( sc->data[SC_TWOHANDQUICKEN] || sc->data[SC_SPEARQUICKEN] || sc->data[SC_ADRENALINE])
 			bonus += 10;
 #endif
 #endif
@@ -8292,7 +8292,11 @@ static int status_change_start_sub(struct block_list *src, struct block_list *bl
 				break;
 			case SC_ADRENALINE2:
 			case SC_ADRENALINE:
+#ifdef RENEWAL
+				val3 = (val2) ? 300 : 250; // aspd increase
+#else
 				val3 = (val2) ? 300 : 200; // aspd increase
+#endif
 				FALLTHROUGH
 			case SC_WEAPONPERFECT:
 				if(sd && pc->checkskill(sd,BS_HILTBINDING)>0)
@@ -10589,6 +10593,7 @@ static bool status_end_sc_before_start(struct block_list *bl, struct status_data
 		break;
 	case SC_MAGICPOWER:
 	case SC_IMPOSITIO:
+
 		status_change_end(bl, type, INVALID_TIMER);
 		break;
 	}
