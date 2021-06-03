@@ -516,7 +516,7 @@ static int64 battle_calc_weapon_damage(struct block_list *src, struct block_list
 	}
 
 #ifdef RENEWAL_EDP
-	if ( sc && sc->data[SC_EDP] && skill_id != AS_GRIMTOOTH && skill_id != AS_VENOMKNIFE && skill_id != ASC_BREAKER ) {
+	if ( sc && sc->data[SC_EDP] && skill_id != AS_GRIMTOOTH && skill_id != AS_VENOMKNIFE && skill_id != ASC_METEORASSAULT ) {
 		struct status_data *tstatus;
 		tstatus = status->get_status_data(bl);
 		eatk += damage * 0x19 * battle->attr_fix_table[tstatus->ele_lv - 1][ELE_POISON][tstatus->def_ele] / 10000;
@@ -2310,7 +2310,7 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 		case SN_SHARPSHOOTING:
 		case MA_SHARPSHOOTING:
 #ifdef RENEWAL
-			skillratio += 50 + 200 * skill_id;
+			skillratio += 50 + 200 * skill_lv;
 			RE_LVL_DMOD(100);
 #else
 			skillratio += 100 + 50 * skill_lv;
@@ -4212,7 +4212,16 @@ static struct Damage battle_calc_misc_attack(struct block_list *src, struct bloc
 			damage_div_fix(md.damage, temp);
 
 			//Falcon Assault Modifier
+#ifdef RENEWAL
+			// This is the irowiki formula, but it produces numbers 6-10 times higher than old Falcon Assault. I believe there's an issue with this formula, so I don't activate it yet.
+			//temp = pc->checkskill(sd, HT_STEELCROW);
+			//md.damage = md.damage * skill_lv + temp * 6;
+			//md.damage = md.damage * (temp / 20 + skill_lv + status->get_lv(src) / 50);
+			// this it he old formula, which I keep using for now (same as rAthena does)
 			md.damage = md.damage * (150 + 70 * skill_lv) / 100;
+#else
+			md.damage = md.damage * (150 + 70 * skill_lv) / 100;
+#endif
 		}
 		break;
 	case TF_THROWSTONE:
@@ -4328,10 +4337,6 @@ static struct Damage battle_calc_misc_attack(struct block_list *src, struct bloc
 		int64 matk = battle->calc_magic_attack(src, target, skill_id, skill_lv, mflag).damage;
 		short totaldef = status->get_total_def(target) + status->get_total_mdef(target);
 		int64 atk = battle->calc_base_damage(src, target, skill_id, skill_lv, nk, false, s_ele, ELE_NEUTRAL, EQI_HAND_R, (sc && sc->data[SC_MAXIMIZEPOWER] ? 1 : 0) | (sc && sc->data[SC_WEAPONPERFECT] ? 8 : 0), md.flag);
-#ifdef RENEWAL_EDP
-		if ( sc && sc->data[SC_EDP] )
-			ratio >>= 1;
-#endif
 		md.damage = (matk + atk) * ratio / 100;
 		md.damage -= totaldef;
 #endif
@@ -5402,11 +5407,11 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 					ATK_ADD(sd->inventory_data[index]->weight * 7 / 100);
 
 				switch ( tstatus->size ) {
-				case SZ_SMALL: //Small: 115%
-					ATK_RATE(115);
+				case SZ_SMALL: //Small: 125%
+					ATK_RATE(125);
 					break;
-				case SZ_BIG: //Large: 85%
-					ATK_RATE(85);
+				case SZ_BIG: //Large: 75%
+					ATK_RATE(75);
 				}
 				wd.damage = battle->calc_masteryfix(src, target, skill_id, skill_lv, wd.damage, wd.div_, 0, flag.weapon);
 				wd.damage = battle->calc_cardfix2(src, target, wd.damage, s_ele, nk, wd.flag);
@@ -5703,7 +5708,7 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 #endif
 				) {
 #ifdef RENEWAL
-				ATK_ADD(3 + sc->data[SC_AURABLADE]->val1 * status->get_lv(src));
+				ATK_ADD((3 + sc->data[SC_AURABLADE]->val1) * status->get_lv(src));
 #endif
 			}
 

@@ -1247,9 +1247,9 @@ static int skill_calc_heal(struct block_list *src, struct block_list *target, ui
 			hp = 0;
 #ifdef RENEWAL
 		if(sc->data[SC_ASSUMPTIO] )
-			hp = hp * sc->data[SC_ASSUMPTIO]->val1 * 2;
+			hp = hp * sc->data[SC_ASSUMPTIO]->val1 * 2 / 100;
 		if ( sc->data[SC_APPLEIDUN] )
-			hp = hp * sc->data[SC_APPLEIDUN]->val1 * 2;
+			hp = hp * sc->data[SC_APPLEIDUN]->val1 * 2 / 100;
 #endif
 	}
 
@@ -5196,7 +5196,7 @@ static int skill_castend_damage_id(struct block_list *src, struct block_list *bl
 	case KN_BOWLINGBASH:
 		if ( flag & 1 ) {
 			skill->attack(skill_get_type(skill_id, skill_lv), src, src, bl, skill_id, skill_lv, tick, skill->area_temp[0] > 0 ? SD_ANIMATION | skill->area_temp[0] : skill->area_temp[0]);
-			skill->blown(src, bl, skill->get_blewcount(skill_id, skill_lv), UNIT_DIR_UNDEFINED, 0);
+			//skill->blown(src, bl, skill->get_blewcount(skill_id, skill_lv), UNIT_DIR_UNDEFINED, 0);
 		} else {
 			skill->area_temp[0] = map->foreachinrange(skill_area_sub, bl, skill_get_splash(skill_id, skill_lv), BL_CHAR, src, skill_id, skill_lv, tick, BCT_ENEMY, skill_area_sub_count);
 			map->foreachinrange(skill->area_sub, bl, skill->get_splash(skill_id, skill_lv), BL_CHAR | BL_SKILL, src, skill_id, skill_lv, tick, flag | BCT_ENEMY | SD_SPLASH | 1, skill->castend_damage_id);
@@ -6271,19 +6271,6 @@ static int skill_castend_id(int tid, int64 tick, int id, intptr_t data)
 			if( !battle->check_undead(tstatus->race, tstatus->def_ele) )
 				break;
 		}
-
-#ifdef RENEWAL
-		if ( ud->skill_id == BA_DISSONANCE ||
-			ud->skill_id == DC_UGLYDANCE ||
-			ud->skill_id == DC_DONTFORGETME ||
-			ud->skill_id == BD_ROKISWEIL ||
-			ud->skill_id == BD_ETERNALCHAOS) {
-			if ( !(map->list[sd->bl.m].flag.pvp || map->list[sd->bl.m].flag.gvg) ) {
-				clif->skill_fail(sd, ud->skill_id, USESKILL_FAIL_CONDITION, 0, 0);
-				break; // these skills are only available in pvp/gvg
-			}
-		}
-#endif
 
 		if( ud->skill_id == RA_WUGSTRIKE ){
 			if( !path->search(NULL,src,src->m,src->x,src->y,target->x,target->y,1,CELL_CHKNOREACH))
@@ -11991,6 +11978,7 @@ static int skill_castend_pos2(struct block_list *src, int x, int y, uint16 skill
 		case NJ_KAMAITACHI:
 	#ifdef RENEWAL
 		case NJ_HUUMA:
+		case HW_GRAVITATION:
 	#endif
 		case NPC_EARTHQUAKE:
 		case NPC_EVILLAND:
@@ -15711,6 +15699,24 @@ static int skill_check_condition_castbegin(struct map_session_data *sd, uint16 s
 				return 0;
 			}
 			break;
+#ifdef RENEWAL
+		case CG_SPECIALSINGER:
+			if ( !(sc && sc->data[SC_ENSEMBLEFATIGUE]) ) {
+				clif->skill_fail(sd, skill_id, USESKILL_FAIL_LEVEL, 0, 0);
+				return 0;
+			}
+			break;
+		case BA_DISSONANCE:
+		case DC_UGLYDANCE:
+		case DC_DONTFORGETME:
+		case BD_ROKISWEIL:
+		case BD_ETERNALCHAOS:
+			if ( !(map->list[sd->bl.m].flag.pvp || map->list[sd->bl.m].flag.gvg) ) {
+				clif->skill_fail(sd, skill_id, USESKILL_FAIL_CONDITION, 0, 0);
+				return 0; // these skills are only available in pvp/gvg
+			}
+			break;
+#endif
 		default:
 		{
 			int ret = skill->check_condition_castbegin_unknown(sc, &skill_id);

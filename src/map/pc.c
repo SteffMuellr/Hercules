@@ -10562,10 +10562,14 @@ static int pc_unequipitem(struct map_session_data *sd, int n, int flag)
 	pc->unequipitem_pos(sd, n, pos);
 	clif->unequipitemack(sd, n, pos, UIA_SUCCESS);
 
-	if ((pos & EQP_ARMS) != 0 && sd->weapontype1 == W_FIST && sd->weapontype2 == W_FIST
-	    && (sd->sc.data[SC_TK_SEVENWIND] == NULL || sd->sc.data[SC_ASPERSIO] != NULL)) { // Check for Seven Wind. (But not level seven!)
-		skill->enchant_elemental_end(&sd->bl, -1);
+	if ( (pos & EQP_ARMS) != 0 ) {
+		if ( sd->weapontype1 == W_FIST && sd->weapontype2 == W_FIST
+			&& (sd->sc.data[SC_TK_SEVENWIND] == NULL || sd->sc.data[SC_ASPERSIO] != NULL) ) { // Check for Seven Wind. (But not level seven!)
+			skill->enchant_elemental_end(&sd->bl, -1);
+		}
+		status_change_end(&sd->bl, SC_EDP, INVALID_TIMER); // irowiki behaviour: Changing weapon at all ends the effect
 	}
+		
 
 	if ((pos & EQP_ARMOR) != 0) {
 		status_change_end(&sd->bl, SC_BENEDICTIO, INVALID_TIMER);
