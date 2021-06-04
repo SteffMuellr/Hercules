@@ -6205,7 +6205,8 @@ static int skill_castend_damage_id(struct block_list *src, struct block_list *bl
  * @param ap: Argument list
  * @return 1 on success, 0 otherwise
  */
-static int skill_apply_songs(struct block_list *target, va_list ap) {
+static int skill_apply_songs(struct block_list *target, va_list ap) 
+{
 	int flag = va_arg(ap, int);
 	struct block_list *src = va_arg(ap, struct block_list *);
 	uint16 skill_id = va_arg(ap, int);
@@ -6242,7 +6243,8 @@ static int skill_apply_songs(struct block_list *target, va_list ap) {
  * @param tick: Timer tick
  * @return Number of targets or 0 otherwise
  */
-static int skill_castend_song(struct block_list *src, uint16 skill_id, uint16 skill_lv, time_t tick) {
+static int skill_castend_song(struct block_list *src, uint16 skill_id, uint16 skill_lv, time_t tick)
+{
 	nullpo_ret(src);
 
 	if ( src->type != BL_PC ) {
