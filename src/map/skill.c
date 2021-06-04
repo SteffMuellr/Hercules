@@ -6258,65 +6258,6 @@ static int skill_castend_song(struct block_list *src, uint16 skill_id, uint16 sk
 		return 0;
 	}
 
-/**
- * Give a song's buff/debuff or damage to all targets around
- * @param target: Target
- * @param ap: Argument list
- * @return 1 on success, 0 otherwise
- */
-static int skill_apply_songs(struct block_list *target, va_list ap) 
-{
-	int flag = va_arg(ap, int);
-	struct block_list *src = va_arg(ap, struct block_list *);
-	uint16 skill_id = va_arg(ap, int);
-	uint16 skill_lv = va_arg(ap, int);
-	time_t tick = va_arg(ap, time_t);
-
-	if ( battle->check_target(src, target, flag) > 0 ) {
-		switch ( skill_id ) {
-			// Attack type songs
-		case BA_DISSONANCE:
-			skill->attack(BF_MAGIC, src, src, target, skill_id, skill_lv, tick, 0);
-			return 1;
-		case DC_UGLYDANCE:
-		case BD_LULLABY:
-			return skill->additional_effect(src, target, skill_id, skill_lv, BF_LONG | BF_SKILL | BF_MISC, ATK_DEF, tick);
-		case BD_ROKISWEIL:
-			if ( src->id == target->id ) // don't affect yourself with Loki's Veil. This compensates for the BDT_WOS flag that rAthena has
-				return 1;
-		default: // Buff/Debuff type songs
-			if ( skill_id == CG_HERMODE && src->id != target->id )
-				status->change_clear_buffs(target, 1); // Dispell only allies
-			return sc_start(src, target, skill->get_sc_type(skill_id), 100, skill_lv, skill->get_time(skill_id, skill_lv));
-		}
-	}
-
-	return 0;
-}
-
-/**
- * Calculate a song's bonus values
- * @param src: Caster
- * @param skill_id: Song skill ID
- * @param skill_lv: Song skill level
- * @param tick: Timer tick
- * @return Number of targets or 0 otherwise
- */
-static int skill_castend_song(struct block_list *src, uint16 skill_id, uint16 skill_lv, time_t tick)
-{
-	nullpo_ret(src);
-
-	if ( src->type != BL_PC ) {
-		ShowWarning("skill_castend_song: Expected player type for src!\n");
-		return 0;
-	}
-
-	int inf2 = skill->get_inf2(skill_id);
-	if ( !(inf2 & INF2_SONG_DANCE || inf2 & INF2_ENSEMBLE_SKILL) ) {
-		ShowWarning("skill_castend_song: Unknown song skill ID: %u\n", skill_id);
-		return 0;
-	}
-
 	struct map_session_data *sd = BL_CAST(BL_PC, src);
 	int flag = BCT_PARTY;
 
@@ -8127,29 +8068,6 @@ static int skill_castend_nodamage_id(struct block_list *src, struct block_list *
 				}
 			}
 			break;
-
-#ifdef RENEWAL
-		case BD_LULLABY:
-		case BD_RICHMANKIM:
-		case BD_ETERNALCHAOS:
-		case BD_DRUMBATTLEFIELD:
-		case BD_RINGNIBELUNGEN:
-		case BD_ROKISWEIL:
-		case BD_INTOABYSS:
-		case BD_SIEGFRIED:
-		case BA_DISSONANCE:
-		case BA_POEMBRAGI:
-		case BA_WHISTLE:
-		case BA_ASSASSINCROSS:
-		case BA_APPLEIDUN:
-		case DC_UGLYDANCE:
-		case DC_HUMMING:
-		case DC_DONTFORGETME:
-		case DC_FORTUNEKISS:
-		case DC_SERVICEFORYOU:
-			skill_castend_song(src, skill_id, skill_lv, tick);
-			break;
-#endif
 
 #ifdef RENEWAL
 		case BD_LULLABY:
