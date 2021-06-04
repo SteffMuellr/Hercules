@@ -8093,29 +8093,6 @@ static int skill_castend_nodamage_id(struct block_list *src, struct block_list *
 			break;
 #endif
 
-#ifdef RENEWAL
-		case BD_LULLABY:
-		case BD_RICHMANKIM:
-		case BD_ETERNALCHAOS:
-		case BD_DRUMBATTLEFIELD:
-		case BD_RINGNIBELUNGEN:
-		case BD_ROKISWEIL:
-		case BD_INTOABYSS:
-		case BD_SIEGFRIED:
-		case BA_DISSONANCE:
-		case BA_POEMBRAGI:
-		case BA_WHISTLE:
-		case BA_ASSASSINCROSS:
-		case BA_APPLEIDUN:
-		case DC_UGLYDANCE:
-		case DC_HUMMING:
-		case DC_DONTFORGETME:
-		case DC_FORTUNEKISS:
-		case DC_SERVICEFORYOU:
-			skill_castend_song(src, skill_id, skill_lv, tick);
-			break;
-#endif
-
 		case TF_STEAL:
 			if(sd) {
 				if(pc->steal_item(sd,bl,skill_lv))
