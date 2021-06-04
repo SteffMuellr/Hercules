@@ -5709,6 +5709,8 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 				) {
 #ifdef RENEWAL
 				ATK_ADD((3 + sc->data[SC_AURABLADE]->val1) * status->get_lv(src));
+#else
+				ATK_ADD(20 * sc->data[SC_AURABLADE]->val1);
 #endif
 			}
 
