@@ -260,40 +260,40 @@ static int battle_delay_damage_sub(int tid, int64 tick, int id, intptr_t data)
 
 	GUARD_MAP_LOCK
 
-		if ( dat ) {
-			struct block_list *src = map->id2bl(dat->src_id);
-			struct map_session_data *sd = BL_CAST(BL_PC, src);
-			struct block_list *target = map->id2bl(dat->target_id);
+	if ( dat ) {
+		struct block_list *src = map->id2bl(dat->src_id);
+		struct map_session_data *sd = BL_CAST(BL_PC, src);
+		struct block_list *target = map->id2bl(dat->target_id);
 
-			if ( target != NULL && !status->isdead(target) ) {
-				//Check to see if you haven't teleported. [Skotlex]
-				if ( src != NULL && (
-					battle_config.fix_warp_hit_delay_abuse ?
-					(dat->skill_id == MO_EXTREMITYFIST || target->m != src->m || check_distance_bl(src, target, dat->distance))
-					:
-					((target->type != BL_PC || BL_UCAST(BL_PC, target)->invincible_timer == INVALID_TIMER)
-						&& (dat->skill_id == MO_EXTREMITYFIST || (target->m == src->m && check_distance_bl(src, target, dat->distance))))
-					) ) {
-					map->freeblock_lock();
-					status_fix_damage(src, target, dat->damage, dat->delay);
-					if ( dat->attack_type && !status->isdead(target) && dat->additional_effects )
-						skill->additional_effect(src, target, dat->skill_id, dat->skill_lv, dat->attack_type, dat->dmg_lv, tick);
-					if ( dat->dmg_lv > ATK_BLOCK && dat->attack_type )
-						skill->counter_additional_effect(src, target, dat->skill_id, dat->skill_lv, dat->attack_type, tick);
-					map->freeblock_unlock();
-				} else if ( src == NULL && dat->skill_id == CR_REFLECTSHIELD ) {
-					// it was monster reflected damage, and the monster died, we pass the damage to the character as expected
-					map->freeblock_lock();
-					status_fix_damage(target, target, dat->damage, dat->delay);
-					map->freeblock_unlock();
-				}
-			}
-
-			if ( sd != NULL && --sd->delayed_damage == 0 && sd->state.hold_recalc ) {
-				sd->state.hold_recalc = 0;
-				status_calc_pc(sd, SCO_FORCE);
+		if ( target != NULL && !status->isdead(target) ) {
+			//Check to see if you haven't teleported. [Skotlex]
+			if ( src != NULL && (
+				battle_config.fix_warp_hit_delay_abuse ?
+				(dat->skill_id == MO_EXTREMITYFIST || target->m != src->m || check_distance_bl(src, target, dat->distance))
+				:
+				((target->type != BL_PC || BL_UCAST(BL_PC, target)->invincible_timer == INVALID_TIMER)
+					&& (dat->skill_id == MO_EXTREMITYFIST || (target->m == src->m && check_distance_bl(src, target, dat->distance))))
+				) ) {
+				map->freeblock_lock();
+				status_fix_damage(src, target, dat->damage, dat->delay);
+				if ( dat->attack_type && !status->isdead(target) && dat->additional_effects )
+					skill->additional_effect(src, target, dat->skill_id, dat->skill_lv, dat->attack_type, dat->dmg_lv, tick);
+				if ( dat->dmg_lv > ATK_BLOCK && dat->attack_type )
+					skill->counter_additional_effect(src, target, dat->skill_id, dat->skill_lv, dat->attack_type, tick);
+				map->freeblock_unlock();
+			} else if ( src == NULL && dat->skill_id == CR_REFLECTSHIELD ) {
+				// it was monster reflected damage, and the monster died, we pass the damage to the character as expected
+				map->freeblock_lock();
+				status_fix_damage(target, target, dat->damage, dat->delay);
+				map->freeblock_unlock();
 			}
 		}
+
+		if ( sd != NULL && --sd->delayed_damage == 0 && sd->state.hold_recalc ) {
+			sd->state.hold_recalc = 0;
+			status_calc_pc(sd, SCO_FORCE);
+		}
+	}
 	ers_free(battle->delay_damage_ers, dat);
 	return 0;
 }
@@ -302,7 +302,7 @@ static int battle_delay_damage(int64 tick, int amotion, struct block_list *src, 
 {
 	GUARD_MAP_LOCK
 
-		struct delay_damage *dat;
+	struct delay_damage *dat;
 	struct status_change *sc;
 	struct block_list *d_tbl = NULL;
 	struct block_list *e_tbl = NULL;
@@ -1740,7 +1740,7 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 			else
 			{ // Monsters continue to use the old formula: 100% 105% 115% 130% 150% 175% 205% 240% 280% 330% per 10 hits
 				int sum = ((skill_lv - 1) * skill_lv) >> 1; // sum of the digits 1 to skill_lv - 1 using n * (n+1) / 2
-				if(skill_lv == 10 )
+				if ( skill_lv == 10 )
 					sum += 1; // The sum for level 10 would be 1+2+3+4+5+6+7+8+9 = 45, but we need it to be 46 for 230% extra damage = 330% total.
 				skillratio += 100 + 10 * sum; // Following iRO Wiki's formula for the damage-per-10-hit-series, multiplied by 2 since we use -20 as hit count in renewal instead of classic's -10
 			}
@@ -4087,7 +4087,7 @@ static struct Damage battle_calc_magic_attack(struct block_list *src, struct blo
 			}
 #endif
 		}
-		
+
 #ifndef RENEWAL
 		ad.damage = battle->calc_cardfix(BF_MAGIC, src, target, nk, s_ele, 0, ad.damage, 0, ad.flag);
 #endif
@@ -5365,7 +5365,7 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 		case AM_ACIDTERROR: // [malufett/Hercules]
 		{
 			int totaldef = status->get_total_def(target) + status->get_total_mdef(target);
-			GET_NORMAL_ATTACK((sc &&sc->data[SC_MAXIMIZEPOWER] ? 1 : 0) | (sc && sc->data[SC_WEAPONPERFECT] ? 8 : 0), 0);
+			GET_NORMAL_ATTACK((sc && sc->data[SC_MAXIMIZEPOWER] ? 1 : 0) | (sc && sc->data[SC_WEAPONPERFECT] ? 8 : 0), 0);
 			ATK_RATE(battle->calc_skillratio(BF_WEAPON, src, target, skill_id, skill_lv, skillratio, wflag));
 
 #ifndef RENEWAL
