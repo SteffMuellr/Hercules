@@ -302,7 +302,7 @@ static int battle_delay_damage(int64 tick, int amotion, struct block_list *src, 
 {
 	GUARD_MAP_LOCK
 
-		struct delay_damage *dat;
+	struct delay_damage *dat;
 	struct status_change *sc;
 	struct block_list *d_tbl = NULL;
 	struct block_list *e_tbl = NULL;
