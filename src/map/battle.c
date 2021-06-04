@@ -5302,7 +5302,9 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 			}
 		}
 
-		if (sc && !skill_id && sc->data[SC_EXEEDBREAK]) {
+		if (sc != NULL && sc->data[SC_HEAT_BARREL])
+			ATK_ADDRATE(sc->data[SC_HEAT_BARREL]->val3);
+		if (sc && !skill_id && sc->data[SC_EXEEDBREAK] ) {
 			ATK_ADDRATE(sc->data[SC_EXEEDBREAK]->val1);
 			status_change_end(src, SC_EXEEDBREAK, INVALID_TIMER);
 		}
