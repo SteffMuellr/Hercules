@@ -4467,12 +4467,12 @@ static int status_calc_watk(struct block_list *bl, struct status_change *sc, int
 	if(sc->data[SC_DRUMBATTLE])
 		watk += sc->data[SC_DRUMBATTLE]->val2;
 #endif
-	if ( sc->data[SC_IMPOSITIO] )
+	if(sc->data[SC_IMPOSITIO] )
 		watk += sc->data[SC_IMPOSITIO]->val2;
-	if ( sc->data[SC_VOLCANO] )
-		watk += sc->data[SC_VOLCANO]->val2;
 	if(sc->data[SC_WATKFOOD])
 		watk += sc->data[SC_WATKFOOD]->val1;
+	if (sc->data[SC_VOLCANO])
+		watk += sc->data[SC_VOLCANO]->val2;
 	if(sc->data[SC_MER_ATK])
 		watk += sc->data[SC_MER_ATK]->val2;
 	if(sc->data[SC_FIGHTINGSPIRIT])
@@ -4928,7 +4928,7 @@ static defType status_calc_def(struct block_list *bl, struct status_change *sc, 
 
 	if (sc->data[SC_STONEHARDSKIN])
 		def += sc->data[SC_STONEHARDSKIN]->val1;
-	if ( sc->data[SC_DRUMBATTLE] )
+	if (sc->data[SC_DRUMBATTLE])
 		def += sc->data[SC_DRUMBATTLE]->val3;
 
 	if (sc->data[SC_STONESKIN])
@@ -6906,7 +6906,7 @@ static int status_get_sc_def(struct block_list *src, struct block_list *bl, enum
 	}
 
 	if (sc) {
-		if ( sc->data[SC_SCRESIST] )
+		if (sc->data[SC_SCRESIST])
 			sc_def += sc->data[SC_SCRESIST]->val1 * 100; //Status resist
 #ifdef RENEWAL
 		else if ( sc->data[SC_SIEGFRIED] && (type == SC_BLIND || type == type == SC_STONE || type == SC_FREEZE || type == SC_STUN || type == SC_CURSE || type == SC_SLEEP || type == SC_SILENCE) )
