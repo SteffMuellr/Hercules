@@ -1685,10 +1685,10 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 #endif
 					break;
 				case SL_STIN:
-					skillratio += (tst->size != SZ_SMALL ? -99 : 10 * skill_lv); //target size must be small (0) for full damage.
+					skillratio += (tst->size!=SZ_SMALL?-99:10*skill_lv); //target size must be small (0) for full damage.
 					break;
 				case SL_STUN:
-					skillratio += (tst->size != SZ_BIG ? 5 * skill_lv : -99); //Full damage is dealt on small/medium targets
+					skillratio += (tst->size!=SZ_BIG?5*skill_lv:-99); //Full damage is dealt on small/medium targets
 					break;
 				case SL_SMA:
 					skillratio += -60 + status->get_lv(src); //Base damage is 40% + lv%
