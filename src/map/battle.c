@@ -5300,8 +5300,7 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 				break;
 
 			case PA_SHIELDCHAIN:
-#endif
-			case CR_SHIELDBOOMERANG:
+			case CR_SHIELDBOOMERANG: // In renewal, Shield bonuses are a bonus to the Skillratio
 				wd.damage = sstatus->batk;
 				if (sd) {
 					int damagevalue = 0;
@@ -5313,6 +5312,7 @@ static struct Damage battle_calc_weapon_attack(struct block_list *src, struct bl
 				} else
 					ATK_ADD(sstatus->rhw.atk2); //Else use Atk2
 				break;
+#endif
 			case HFLI_SBR44: //[orn]
 				if (src->type == BL_HOM) {
 					const struct homun_data *hd = BL_UCCAST(BL_HOM, src);
