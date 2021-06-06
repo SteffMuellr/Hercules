@@ -5806,8 +5806,8 @@ static unsigned int status_calc_maxhp(struct block_list *bl, struct status_chang
 #ifdef RENEWAL
 	if ( sc->data[SC_ANGELUS] )
 		maxhp += sc->data[SC_ANGELUS]->val1 * 50;
-	if ( sc->data[SC_NIBELUNGEN] && sc->data[SC_NIBELUNGEN]->val2 == RINGNBL_HPRATE )
-		maxhp *= 1.3;
+	if (sc->data[SC_NIBELUNGEN] && sc->data[SC_NIBELUNGEN]->val2 == RINGNBL_HPRATE)
+		maxhp += maxhp * 30 / 100;
 #endif
 
 	return (unsigned int)cap_value(maxhp, 1, UINT_MAX);
