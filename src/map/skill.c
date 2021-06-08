@@ -7274,13 +7274,10 @@ static int skill_castend_nodamage_id(struct block_list *src, struct block_list *
 #else
 			// 100% success rate at lv4 & 5, but lasts longer at lv5
 			if(!clif->skill_nodamage(src,bl,skill_id,skill_lv, sc_start(src,bl,type,(60+skill_lv*10),skill_lv, skill->get_time(skill_id,skill_lv)))) {
-				if ( dstsd ) {
-					short index = dstsd->equip_index[EQI_HAND_R];
-					if ( index & EQP_WEAPON && dstsd->inventory_data[index]->type == IT_WEAPON )
-						pc->unequipitem(dstsd, index, 3); // Official behaviour is removing wepaon instead of breaking it (Irowiki)
-				}
 				if (sd)
 					clif->skill_fail(sd, skill_id, USESKILL_FAIL_LEVEL, 0, 0);
+				if (skill->break_equip(bl, EQP_WEAPON, 10000, BCT_PARTY) && sd && sd != dstsd)
+					clif->message(sd->fd, msg_sd(sd, 869)); // "You broke the target's weapon."
 			}
 #endif
 			break;
