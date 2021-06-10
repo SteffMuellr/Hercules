@@ -2174,10 +2174,12 @@ static int battle_calc_skillratio(int attack_type, struct block_list *src, struc
 				case CR_SHIELDBOOMERANG:
 #ifdef RENEWAL
 					skillratio += -100 + 80 * skill_lv;
-					short index = sd->equip_index[EQI_HAND_L];
-					if (index >= 0 && sd->inventory_data[index] && sd->inventory_data[index]->type == IT_ARMOR) {
-						skillratio += sd->inventory_data[index]->weight / 10;
-						skillratio += sd->status.inventory[index].refine * 5;
+					if (sd) {
+						short index = sd->equip_index[EQI_HAND_L];
+						if (index >= 0 && sd->inventory_data[index] && sd->inventory_data[index]->type == IT_ARMOR) {
+							skillratio += sd->inventory_data[index]->weight / 10;
+							skillratio += sd->status.inventory[index].refine * 5;
+						}	
 					}
 #else
 					skillratio += 30 * skill_lv;
