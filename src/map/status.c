@@ -6909,7 +6909,7 @@ static int status_get_sc_def(struct block_list *src, struct block_list *bl, enum
 		if (sc->data[SC_SCRESIST])
 			sc_def += sc->data[SC_SCRESIST]->val1 * 100; //Status resist
 #ifdef RENEWAL
-		else if ( sc->data[SC_SIEGFRIED] && (type == SC_BLIND || type == type == SC_STONE || type == SC_FREEZE || type == SC_STUN || type == SC_CURSE || type == SC_SLEEP || type == SC_SILENCE) )
+		else if ( sc->data[SC_SIEGFRIED] && (type == SC_BLIND || type == SC_STONE || type == SC_FREEZE || type == SC_STUN || type == SC_CURSE || type == SC_SLEEP || type == SC_SILENCE) )
 			sc_def += sc->data[SC_SIEGFRIED]->val3 * 100; // Status resistance
 #else
 		else if (sc->data[SC_SIEGFRIED])
@@ -10280,8 +10280,8 @@ static bool status_end_sc_before_start(struct block_list *bl, struct status_data
 	case SC_DEC_AGI:
 	case SC_ADORAMUS:
 		status_change_end(bl, SC_CARTBOOST, INVALID_TIMER);
-		FALLTHROUGH // Also blocks the ones below...
 #ifndef RENEWAL
+	FALLTHROUGH // Also blocks the ones below...
 	case SC_DONTFORGETME:
 #endif
 		status_change_end(bl, SC_INC_AGI, INVALID_TIMER);
@@ -10327,7 +10327,7 @@ static bool status_end_sc_before_start(struct block_list *bl, struct status_data
 		status_change_end(bl, SC_ONEHANDQUICKEN, INVALID_TIMER);
 		status_change_end(bl, SC_MER_QUICKEN, INVALID_TIMER);
 		status_change_end(bl, SC_ACCELERATION, INVALID_TIMER);
-		break;
+		FALLTHROUGH
 	case SC_HUMMING:
 	case SC_FORTUNE:
 	case SC_SERVICEFORYOU:
@@ -10335,6 +10335,7 @@ static bool status_end_sc_before_start(struct block_list *bl, struct status_data
 		status_change_end(bl, SC_HUMMING, INVALID_TIMER);
 		status_change_end(bl, SC_FORTUNE, INVALID_TIMER);
 		status_change_end(bl, SC_SERVICEFORYOU, INVALID_TIMER);
+		break;
 #endif
 	case SC_ONEHANDQUICKEN:
 		// Removes the Aspd potion effect, as reported by Vicious. [Skotlex]

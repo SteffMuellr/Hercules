@@ -5187,7 +5187,6 @@ static int skill_castend_damage_id(struct block_list *src, struct block_list *bl
 				// skill->area_temp[1] holds the id of the original target
 				// skill->area_temp[2] counts how many targets have already been processed
 				int sflag = skill->area_temp[0] & 0xFFF, heal;
-				struct status_change *tsc = status->get_sc(bl);
 				if ( flag & SD_LEVEL )
 					sflag |= SD_LEVEL; // -1 will be used in packets instead of the skill level
 				if ( (skill->area_temp[1] != bl->id && !(skill->get_inf2(skill_id) & INF2_NPC_SKILL)) || flag & SD_ANIMATION )
@@ -6225,6 +6224,7 @@ static int skill_apply_songs(struct block_list *target, va_list ap)
 		case BD_ROKISWEIL:
 			if ( src->id == target->id ) // don't affect yourself with Loki's Veil. This compensates for the BDT_WOS flag that rAthena has
 				return 1;
+			FALLTHROUGH
 		default: // Buff/Debuff type songs
 			if ( skill_id == CG_HERMODE && src->id != target->id )
 				status->change_clear_buffs(target, 1); // Dispell only allies
@@ -13709,7 +13709,7 @@ static int skill_unit_onplace(struct skill_unit *src, struct block_list *bl, int
 			if (!sce)
 				sc_start4(ss,bl,type,100,sg->skill_lv,0,BCT_ENEMY,sg->group_id,sg->limit);
 			break;
-#endif;
+#endif
 #if 0 // officially, icewall has no problems existing on occupied cells [ultramage]
 		case UNT_ICEWALL: //Destroy the cell. [Skotlex]
 			src->val1 = 0;
@@ -15022,9 +15022,7 @@ static int skill_check_pc_partner(struct map_session_data *sd, uint16 skill_id, 
 			default:
 				if( is_chorus )
 					break;//Chorus skills are not to be parsed as ensambles
-				int inf2 = skill->get_inf2(skill_id);
 				if ( skill->get_inf2(skill_id) & INF2_ENSEMBLE_SKILL ) {
-					struct status_change_entry *sce = sd->sc.data[SC_DANCING];
 					tsd = map->id2sd(p_sd[0]);
 					if ( c > 0
 #ifndef RENEWAL
